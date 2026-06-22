@@ -112,30 +112,30 @@ Quando um player se move, o servidor deve notificar todos os players no mesmo vi
 
 ---
 
-## Fase D — Combate Básico
+## Fase D — Combate Básico (COMPLETED)
 
-| Opcode | Hex | Descrição |
-|--------|-----|-----------|
-| `ClientAttack` | 0xA1 | Iniciar ataque em criatura |
-| `ClientChangeFightModes` | 0xA0 | Modo de combate |
-| `GameServerCreatureHealth` | 0x8C | Atualizar HP de criatura |
-| `GameServerGraphicalEffect` | 0x83 | Efeito visual de spell/ataque |
-| `GameServerTextEffect` | 0x84 | Número de dano flutuante |
-| `GameServerMissleEffect` | 0x85 | Projétil animado |
-| `GameServerDeath` | 0x28 | Morte do personagem |
+| Opcode | Hex | Descrição | Status |
+|--------|-----|-----------|--------|
+| `ClientAttack` | 0xA1 | Iniciar ataque em criatura | ✅ Feito |
+| `ClientChangeFightModes` | 0xA0 | Modo de combate | ✅ Feito (Ignorado) |
+| `GameServerCreatureHealth` | 0x8C | Atualizar HP de criatura | ✅ Feito |
+| `GameServerGraphicalEffect` | 0x83 | Efeito visual de spell/ataque | ✅ Feito |
+| `GameServerTextEffect` | 0x84 | Número de dano flutuante | ✅ Feito |
+| `GameServerMissleEffect` | 0x85 | Projétil animado | Ignorado |
+| `GameServerDeath` | 0x28 | Morte do personagem | ✅ Feito |
 
 ---
 
-## Fase E — Chat
+## Fase E — Chat (COMPLETED)
 
-| Opcode | Hex | Prioridade |
-|--------|-----|------------|
-| `ClientTalk` | 0x96 | Alta — fala local |
-| `GameServerTalk` | 0xAA | Alta — receber falas |
-| `ClientRequestChannels` | 0x97 | Média |
-| `GameServerChannels` | 0xAB | Média |
-| `ClientJoinChannel` | 0x98 | Média |
-| `GameServerOpenChannel` | 0xAC | Média |
+| Opcode | Hex | Prioridade | Status |
+|--------|-----|------------|--------|
+| `ClientTalk` | 0x96 | Alta | ✅ Feito |
+| `GameServerTalk` | 0xAA | Alta | ✅ Feito |
+| `ClientRequestChannels` | 0x97 | Média | Ignorado por hora |
+| `GameServerChannels` | 0xAB | Média | Ignorado por hora |
+| `ClientJoinChannel` | 0x98 | Média | Ignorado por hora |
+| `GameServerOpenChannel` | 0xAC | Média | Ignorado por hora |
 
 ---
 

@@ -137,10 +137,12 @@ backlands-client/
       character.js       — Character class: smooth movement, direction system, sprite draw with flip
 ```
 
-### WebSocket Flow (Binary, Phase A)
+### WebSocket Flow (Binary, Phase E Complete)
 1. **Login** → `connect()` (`binaryType='arraybuffer'`) → `PacketWriter` sends `C_LOGIN` → receive `S_CHAR_LIST` (opcode `0x64`)
 2. **Char Select** → renders server players with idle sprite → `PacketWriter` sends `C_ENTER_GAME [u32 id]` → receive `S_ENTER_GAME` (opcode `0x17`)
 3. **Game** → spawns character at `pos_x/pos_y`, WASD sends `C_WALK_*` opcodes → receive `S_PLAYER_DATA` confirmation
+4. **Combat** → Mouse click selects target (via Bounding Box) → sends `C_ATTACK` → Server combat loop ticks every 2s → broadcasts `S_CREATURE_HEALTH` + `S_GRAPHICAL_EFFECT` + `S_TEXT_EFFECT`.
+5. **Chat** → Input `Enter` sends `C_TALK` → Server broadcasts `S_TALK` → Client renders floating text over speaker's head.
 
 ### Network Module Files (`src/network/`)
 - **`opcodes.js`** — `C_*` / `S_*` hex constants matching server
