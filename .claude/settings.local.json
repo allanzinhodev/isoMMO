@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(rustc --version)",
+      "Bash(cargo --version)",
+      "PowerShell(rustc --version)",
+      "PowerShell(cargo --version)",
+      "PowerShell(New-Item -ItemType Directory -Force \"c:\\\\Users\\\\allan\\\\isoMMO\\\\backlands-server\\\\src\\\\network\")",
+      "PowerShell(New-Item -ItemType Directory -Force \"c:\\\\Users\\\\allan\\\\isoMMO\\\\backlands-server\\\\src\\\\db\")",
+      "PowerShell(New-Item -ItemType Directory -Force \"c:\\\\Users\\\\allan\\\\isoMMO\\\\backlands-server\\\\src\\\\game\")",
+      "PowerShell(Add-MpPreference -ExclusionPath \"C:\\\\Users\\\\allan\\\\isoMMO\\\\backlands-server\\\\target\" -ErrorAction SilentlyContinue)",
+      "PowerShell(Add-MpPreference -ExclusionPath \"C:\\\\Users\\\\allan\\\\.cargo\" -ErrorAction SilentlyContinue)"
+    ]
+  }
+}

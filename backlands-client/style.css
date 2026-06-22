@@ -1,0 +1,128 @@
+:root {
+  --color-green: #2ecc71;
+  --color-yellow: #f1c40f;
+  --color-blue: #3498db;
+  --color-dark: #2c3e50;
+  --color-light: #ecf0f1;
+  --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 32px;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-family);
+  background-color: var(--color-dark);
+  color: var(--color-light);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  overflow: hidden;
+}
+
+#game-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+}
+
+#ui-root {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  max-width: 800px;
+  padding: var(--spacing-md);
+}
+
+.card {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: var(--spacing-lg);
+  box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+  backdrop-filter: blur(5px);
+  text-align: center;
+}
+
+.input-group {
+  margin-bottom: var(--spacing-md);
+  text-align: left;
+}
+
+.input-group label {
+  display: block;
+  margin-bottom: var(--spacing-sm);
+  color: var(--color-yellow);
+  font-weight: bold;
+}
+
+.input-group input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid var(--color-blue);
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.2);
+  color: white;
+  box-sizing: border-box;
+}
+
+button {
+  background-color: var(--color-green);
+  color: var(--color-dark);
+  border: none;
+  padding: 12px 24px;
+  font-size: 16px;
+  font-weight: bold;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+button:hover {
+  background-color: #27ae60;
+}
+
+.error-msg {
+  color: #e74c3c;
+  margin-top: var(--spacing-sm);
+  min-height: 20px;
+}
+
+.char-list {
+  display: flex;
+  gap: var(--spacing-md);
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.char-card {
+  background-color: rgba(0,0,0,0.3);
+  border: 2px solid var(--color-blue);
+  border-radius: 8px;
+  padding: var(--spacing-md);
+  width: 200px;
+  text-align: center;
+}
+
+.char-avatar {
+  width: 80px;
+  height: 80px;
+  background-color: var(--color-yellow);
+  margin: 0 auto var(--spacing-md);
+  border-radius: 40px;
+}
+
+.char-name {
+  font-weight: bold;
+  color: var(--color-green);
+  margin-bottom: var(--spacing-sm);
+}
+
+.char-class, .char-level {
+  font-size: 14px;
+  margin-bottom: var(--spacing-sm);
+}

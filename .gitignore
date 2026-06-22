@@ -1,0 +1,3 @@
+backlands-server/target/
+backlands-server/.env
+*.db
