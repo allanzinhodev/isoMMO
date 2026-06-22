@@ -15,12 +15,13 @@ import {
   S_CREATURE_HEALTH, S_DEATH, S_GRAPHICAL_EFFECT, S_TEXT_EFFECT,
   C_TALK, S_TALK
 } from './network/opcodes.js';
+import { loadAssets, isLoaded } from './game/assets.js';
 
 let debugGrid  = false;
 let activeLoop = null;
 const keys     = {};
 
-function startGame(container) {
+async function startGame(container) {
   container.innerHTML = '';
 
   const char     = state.get('selectedCharacter');
@@ -314,8 +315,12 @@ window.addEventListener('hashchange', () => {
   render(location.hash);
 });
 
-function render(hash) {
+async function render(hash) {
   const uiRoot = document.getElementById('ui-root');
+  if (!isLoaded()) {
+    uiRoot.innerHTML = '<h2 style="color:white; text-align:center; padding-top: 20%;">Carregando Arquivos .SPR e .DAT...</h2>';
+    await loadAssets();
+  }
   uiRoot.innerHTML = '';
   (routes[hash] ?? routes['#login'])(uiRoot);
 }

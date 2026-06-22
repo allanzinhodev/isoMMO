@@ -14,10 +14,7 @@ export const CHARACTER_TYPE = {
   BLUE_MAGE:  2,
 };
 
-const sheet = new Image();
-let sheetLoaded = false;
-sheet.onload = () => { sheetLoaded = true; };
-sheet.src = 'src/assets/character.png';
+import { getCharSprite } from './assets.js';
 
 const DIR_CONFIG = {
   1: { idle: 3, walk: [4, 5], flipH: true  }, // NE
@@ -102,10 +99,11 @@ export class Character {
   }
 
   draw(ctx, offsetX, offsetY) {
-    if (!sheetLoaded) return;
+    const frame = this.getFrame();
+    const sprite = getCharSprite(this.type, frame);
+    if (!sprite) return;
 
     const { x, y } = isoToScreen(this._visualCol, this._visualRow, offsetX, offsetY);
-    const frame = this.getFrame();
     const cfg   = DIR_CONFIG[this.direction] ?? DIR_CONFIG[1];
 
     const dw = SPRITE_W * SCALE;
@@ -113,7 +111,6 @@ export class Character {
 
     const drawX  = Math.round(x - dw / 2);
     const drawY  = Math.round(y + TILE_H - dh - 4);
-    const sheetY = this.type * SPRITE_H; // row in spritesheet
 
     ctx.save();
     ctx.imageSmoothingEnabled = false;
@@ -128,9 +125,9 @@ export class Character {
     if (cfg.flipH) {
       ctx.translate(drawX + dw, drawY);
       ctx.scale(-1, 1);
-      ctx.drawImage(sheet, frame * SPRITE_W, sheetY, SPRITE_W, SPRITE_H, 0, 0, dw, dh);
+      ctx.drawImage(sprite, 0, 0, dw, dh);
     } else {
-      ctx.drawImage(sheet, frame * SPRITE_W, sheetY, SPRITE_W, SPRITE_H, drawX, drawY, dw, dh);
+      ctx.drawImage(sprite, drawX, drawY, dw, dh);
     }
     
     // Draw health bar

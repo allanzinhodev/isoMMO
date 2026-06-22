@@ -9,21 +9,23 @@ const SCALE    = 3;
 const IDLE_FRAME   = { 0: 3, 1: 0, 2: 3 }; // vocation → idle frame
 const VOCATION_NAME = { 0: 'Black Mage', 1: 'Hunter', 2: 'Blue Mage' };
 
+import { getCharSprite } from '../game/assets.js';
+
 function drawCharPreview(canvas, looktype) {
-  const sheet = new Image();
-  sheet.src = 'src/assets/character.png';
-  const draw = () => {
-    const ctx = canvas.getContext('2d');
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.imageSmoothingEnabled = false;
-    const frame = IDLE_FRAME[looktype] ?? 0;
-    const dw = SPRITE_W * SCALE;
-    const dh = SPRITE_H * SCALE;
-    const dx = (canvas.width  - dw) / 2;
-    const dy = (canvas.height - dh) / 2;
-    ctx.drawImage(sheet, frame * SPRITE_W, looktype * SPRITE_H, SPRITE_W, SPRITE_H, dx, dy, dw, dh);
-  };
-  if (sheet.complete) draw(); else sheet.onload = draw;
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.imageSmoothingEnabled = false;
+  
+  const frame = IDLE_FRAME[looktype] ?? 0;
+  const sprite = getCharSprite(looktype, frame);
+  if (!sprite) return;
+  
+  const dw = SPRITE_W * SCALE;
+  const dh = SPRITE_H * SCALE;
+  const dx = (canvas.width  - dw) / 2;
+  const dy = (canvas.height - dh) / 2;
+  
+  ctx.drawImage(sprite, dx, dy, dw, dh);
 }
 
 export function showCharSelect(container) {

@@ -3,10 +3,7 @@ import { TILE_W, TILE_H, getTile, getMapCols, getMapRows } from './map.js';
 const HALF_W = TILE_W / 2;
 const HALF_H = TILE_H / 2;
 
-const tilesImage = new Image();
-let tilesLoaded = false;
-tilesImage.onload = () => { tilesLoaded = true; };
-tilesImage.src = 'src/assets/tiles.png';
+import { getTileSprite } from './assets.js';
 
 export function isoToScreen(col, row, offsetX, offsetY) {
   return {
@@ -28,8 +25,9 @@ function drawTile(ctx, col, row, offsetX, offsetY, debugGrid) {
   const { x, y } = isoToScreen(col, row, offsetX, offsetY);
   const tileType  = getTile(row, col);
 
-  if (tilesLoaded) {
-    ctx.drawImage(tilesImage, tileType * TILE_W, 0, TILE_W, TILE_W, x - HALF_W, y, TILE_W, TILE_W);
+  const sprite = getTileSprite(tileType);
+  if (sprite) {
+    ctx.drawImage(sprite, x - HALF_W, y, TILE_W, TILE_W);
   }
 
   if (debugGrid) {
