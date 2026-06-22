@@ -126,3 +126,29 @@ button:hover {
   font-size: 14px;
   margin-bottom: var(--spacing-sm);
 }
+
+#chat-container {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  width: 300px;
+  z-index: 20;
+  display: flex;
+}
+
+#chat-input {
+  width: 100%;
+  padding: 8px 12px;
+  background-color: rgba(0, 0, 0, 0.5);
+  border: 1px solid var(--color-blue);
+  border-radius: 4px;
+  color: white;
+  font-family: var(--font-family);
+  outline: none;
+  transition: background-color 0.2s;
+}
+
+#chat-input:focus {
+  background-color: rgba(0, 0, 0, 0.8);
+  border-color: var(--color-green);
+}

@@ -18,6 +18,8 @@ pub async fn run(pool: MySqlPool, addr: &str, world_map: Arc<WorldMap>, game: Ar
     let listener = TcpListener::bind(addr).await.expect("failed to bind");
     println!("[server] listening on ws://{addr}");
 
+    tokio::spawn(combat_loop(game.clone()));
+
     loop {
         let (stream, peer) = listener.accept().await.expect("accept failed");
         println!("[server] connection from {peer}");
@@ -170,37 +172,17 @@ async fn handle_connection(
                 if cid == target_id { continue; } // no self attack
 
                 let mut g = game.write().await;
-                
-                let mut target_died = false;
-                let mut hp_percent = 0;
-                let mut tx = 0;
-                let mut ty = 0;
-                let mut valid = false;
-
-                if let Some(target) = g.players.get_mut(&target_id) {
-                    if target.hp > 0 {
-                        target.hp = target.hp.saturating_sub(10);
-                        hp_percent = ((target.hp as f32 / target.max_hp as f32) * 100.0) as u8;
-                        tx = target.pos_x;
-                        ty = target.pos_y;
-                        target_died = target.hp == 0;
-                        valid = true;
-                    }
+                if let Some(attacker) = g.players.get_mut(&cid) {
+                    attacker.target_id = Some(target_id);
                 }
+            }
 
-                if valid {
-                    let hp_pkt = protocol::creature_health(target_id, hp_percent);
-                    let fx_pkt = protocol::graphical_effect(tx, ty, 1);
-                    let dmg_pkt = protocol::text_effect(tx, ty, 180, "-10");
-                    
-                    g.broadcast_all(hp_pkt);
-                    g.broadcast_all(fx_pkt);
-                    g.broadcast_all(dmg_pkt);
-                    
-                    if target_died {
-                        g.broadcast_all(protocol::death(target_id));
-                    }
-                }
+            ClientMsg::Talk { type_, text } => {
+                let Some(cid) = creature_id else { continue; };
+                // Ensure name is safe to broadcast
+                let pkt = protocol::talk(&my_name, type_, &text);
+                let g = game.read().await;
+                g.broadcast_all(pkt);
             }
 
             ClientMsg::ChangeFightModes { .. } => {
@@ -264,4 +246,78 @@ async fn commit_move(
     drop(g); // release write lock before sending
 
     let _ = btx.send(protocol::player_data(pos_x, pos_y, direction));
+}
+
+/// Global combat loop running every 2 seconds
+async fn combat_loop(game: Arc<RwLock<GameWorld>>) {
+    let mut interval = tokio::time::interval(tokio::time::Duration::from_millis(2000));
+    loop {
+        interval.tick().await;
+        let mut g = game.write().await;
+        
+        let mut attacks = Vec::new();
+        for state in g.players.values() {
+            if let Some(target_id) = state.target_id {
+                attacks.push((state.creature_id, target_id));
+            }
+        }
+        
+        for (attacker_id, target_id) in attacks {
+            let (ax, ay) = if let Some(a) = g.players.get(&attacker_id) {
+                (a.pos_x, a.pos_y)
+            } else { continue; };
+            
+            let mut target_died = false;
+            let mut hp_percent = 0;
+            let mut tx = 0;
+            let mut ty = 0;
+            let mut valid = false;
+            
+            if let Some(t) = g.players.get_mut(&target_id) {
+                if (t.pos_x - ax).abs() <= 1 && (t.pos_y - ay).abs() <= 1 {
+                    if t.hp > 0 {
+                        t.hp = t.hp.saturating_sub(10);
+                        hp_percent = ((t.hp as f32 / t.max_hp as f32) * 100.0) as u8;
+                        tx = t.pos_x;
+                        ty = t.pos_y;
+                        target_died = t.hp == 0;
+                        valid = true;
+                    }
+                } else {
+                    // Out of range
+                }
+            }
+            
+            if valid {
+                let hp_pkt = protocol::creature_health(target_id, hp_percent);
+                let fx_pkt = protocol::graphical_effect(tx, ty, 1);
+                let dmg_pkt = protocol::text_effect(tx, ty, 180, "-10");
+                
+                g.broadcast_all(hp_pkt);
+                g.broadcast_all(fx_pkt);
+                g.broadcast_all(dmg_pkt);
+                
+                if target_died {
+                    g.broadcast_all(protocol::death(target_id));
+                    // Remove from world and clear targets
+                    g.remove(target_id);
+                }
+            }
+        }
+        
+        // If target died, clear it from all attackers
+        let mut to_clear = Vec::new();
+        for (cid, state) in &g.players {
+            if let Some(tid) = state.target_id {
+                if !g.players.contains_key(&tid) {
+                    to_clear.push(*cid);
+                }
+            }
+        }
+        for cid in to_clear {
+            if let Some(state) = g.players.get_mut(&cid) {
+                state.target_id = None;
+            }
+        }
+    }
 }

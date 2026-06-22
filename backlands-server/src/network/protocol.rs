@@ -20,6 +20,7 @@ pub enum ClientMsg {
     Logout,
     Attack { target_id: u32 },
     ChangeFightModes { mode: u8, chase: u8 },
+    Talk { type_: u8, text: String },
     Unknown(u8),
 }
 
@@ -43,6 +44,7 @@ pub fn decode(data: &[u8]) -> Option<ClientMsg> {
         C_LOGOUT     => ClientMsg::Logout,
         C_ATTACK     => ClientMsg::Attack { target_id: p.read_u32()? },
         C_CHANGE_FIGHT_MODES => ClientMsg::ChangeFightModes { mode: p.read_u8()?, chase: p.read_u8()? },
+        C_TALK       => ClientMsg::Talk { type_: p.read_u8()?, text: p.read_string()? },
         op           => ClientMsg::Unknown(op),
     };
     Some(msg)
@@ -96,6 +98,15 @@ pub fn text_message(msg_type: u8, message: &str) -> Vec<u8> {
     b.write_u8(msg_type);
     b.write_string(message);
     b.into_packet(S_TEXT_MESSAGE)
+}
+
+/// [str name][u8 type][str text]
+pub fn talk(name: &str, type_: u8, text: &str) -> Vec<u8> {
+    let mut b = ByteBuffer::new();
+    b.write_string(name);
+    b.write_u8(type_);
+    b.write_string(text);
+    b.into_packet(S_TALK)
 }
 
 pub fn ping_back() -> Vec<u8> {

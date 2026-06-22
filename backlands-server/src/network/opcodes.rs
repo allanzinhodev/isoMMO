@@ -13,12 +13,14 @@ pub const C_TURN_SOUTH: u8 = 0x71;
 pub const C_TURN_WEST:  u8 = 0x72;
 pub const C_ATTACK:             u8 = 0xA1;
 pub const C_CHANGE_FIGHT_MODES: u8 = 0xA0;
+pub const C_TALK:           u8 = 0x96;
 
 // Server → Client opcodes (TFS-aligned)
 pub const S_LOGIN_ERROR:    u8 = 0x0A;
 pub const S_ENTER_GAME:     u8 = 0x17;
 pub const S_PING_BACK:      u8 = 0x1D;
 pub const S_PING:           u8 = 0x1E;
+pub const S_TALK:           u8 = 0xAA;
 // 0x64: S_CHAR_LIST in login phase / S_FULL_MAP in game phase (same opcode, different ports in TFS)
 pub const S_CHAR_LIST:      u8 = 0x64;
 pub const S_FULL_MAP:       u8 = 0x64;

@@ -12,7 +12,8 @@ import {
   C_WALK_NORTH, C_WALK_EAST, C_WALK_SOUTH, C_WALK_WEST, C_ATTACK,
   S_FULL_MAP, S_PLAYER_DATA,
   S_CREATE_ON_MAP, S_DELETE_ON_MAP, S_MOVE_CREATURE,
-  S_CREATURE_HEALTH, S_DEATH, S_GRAPHICAL_EFFECT, S_TEXT_EFFECT
+  S_CREATURE_HEALTH, S_DEATH, S_GRAPHICAL_EFFECT, S_TEXT_EFFECT,
+  C_TALK, S_TALK
 } from './network/opcodes.js';
 
 let debugGrid  = false;
@@ -27,8 +28,10 @@ function startGame(container) {
   const startRow = char?.pos_y   ?? 5;
   const looktype = char?.looktype ?? 0;
 
+  document.getElementById('ui-root').innerHTML = '';
   const canvas = document.getElementById('game-canvas');
-  canvas.style.display    = 'block';
+  canvas.style.display = 'block';
+  document.getElementById('chat-container').style.display = 'flex';
   canvas.style.background = '#1a1a2e';
   canvas.width  = window.innerWidth;
   canvas.height = window.innerHeight;
@@ -120,7 +123,29 @@ function startGame(container) {
     addFloatingText(x, y, color, text);
   });
 
+  on(S_TALK, (pkt) => {
+    // string name, type u8, string text
+    const name = pkt.readString();
+    const type = pkt.readU8();
+    const text = pkt.readString();
+
+    // Find who spoke to draw text over their head
+    let speaker = null;
+    if (player && player.name === name) speaker = player;
+    else speaker = getCreatures().find(c => c.name === name);
+
+    if (speaker) {
+      addFloatingText(speaker.col, speaker.row, 210, text); // 210 = yellow in TFS
+    } else {
+      console.log(`[Chat] ${name}: ${text}`);
+    }
+  });
+
   // ── Input ────────────────────────────────────────────────────────────────
+
+  const chatInput = document.getElementById('chat-input');
+  const chatContainer = document.getElementById('chat-container');
+  let isChatFocused = false;
 
   const onResize = () => {
     canvas.width  = window.innerWidth;
@@ -128,10 +153,33 @@ function startGame(container) {
     ctx.imageSmoothingEnabled = false;
   };
   const onKeyDown = (e) => {
-    keys[e.key] = true;
-    if (e.key === 'g' || e.key === 'G') debugGrid = !debugGrid;
+    if (e.key === 'Enter') {
+      if (!isChatFocused) {
+        isChatFocused = true;
+        chatInput.focus();
+      } else {
+        const text = chatInput.value.trim();
+        if (text.length > 0) {
+          const p = new PacketWriter();
+          p.writeU8(1); // Talk type: say (local)
+          p.writeString(text);
+          send(p.build(C_TALK));
+        }
+        chatInput.value = '';
+        chatInput.blur();
+        isChatFocused = false;
+      }
+      return;
+    }
+
+    if (!isChatFocused) {
+      keys[e.key] = true;
+      if (e.key === 'g' || e.key === 'G') debugGrid = !debugGrid;
+    }
   };
-  const onKeyUp = (e) => { keys[e.key] = false; };
+  const onKeyUp = (e) => { 
+    if (!isChatFocused) keys[e.key] = false; 
+  };
   
   const onMouseDown = (e) => {
     const w = canvas.width;
@@ -249,6 +297,7 @@ function stopGame() {
     activeLoop = null;
   }
   document.getElementById('game-canvas').style.display = 'none';
+  document.getElementById('chat-container').style.display = 'none';
   clearCreatures();
 }
 
