@@ -1,6 +1,10 @@
 mod db;
 mod game;
 mod network;
+mod utils;
+
+use std::sync::Arc;
+use tokio::sync::RwLock;
 
 #[tokio::main]
 async fn main() {
@@ -19,5 +23,10 @@ async fn main() {
 
     db::seed_default_account(&pool).await;
 
-    network::run(pool, &server_addr).await;
+    let world_map = Arc::new(game::map::WorldMap::new());
+    println!("[world] map loaded ({}x{})", world_map.cols(), world_map.rows());
+
+    let game = Arc::new(RwLock::new(game::state::GameWorld::new()));
+
+    network::run(pool, &server_addr, world_map, game).await;
 }

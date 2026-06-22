@@ -10,7 +10,10 @@
       "PowerShell(New-Item -ItemType Directory -Force \"c:\\\\Users\\\\allan\\\\isoMMO\\\\backlands-server\\\\src\\\\db\")",
       "PowerShell(New-Item -ItemType Directory -Force \"c:\\\\Users\\\\allan\\\\isoMMO\\\\backlands-server\\\\src\\\\game\")",
       "PowerShell(Add-MpPreference -ExclusionPath \"C:\\\\Users\\\\allan\\\\isoMMO\\\\backlands-server\\\\target\" -ErrorAction SilentlyContinue)",
-      "PowerShell(Add-MpPreference -ExclusionPath \"C:\\\\Users\\\\allan\\\\.cargo\" -ErrorAction SilentlyContinue)"
+      "PowerShell(Add-MpPreference -ExclusionPath \"C:\\\\Users\\\\allan\\\\.cargo\" -ErrorAction SilentlyContinue)",
+      "PowerShell(New-Item -ItemType Directory -Force \"c:\\\\Users\\\\allan\\\\isoMMO\\\\docs\\\\planning\")",
+      "PowerShell(Start-Process -FilePath \"C:\\\\cargo-targets\\\\backlands-server\\\\debug\\\\backlands-server.exe\" -WorkingDirectory \"C:\\\\Users\\\\allan\\\\isoMMO\\\\backlands-server\" -WindowStyle Normal)",
+      "PowerShell(Get-Process -Name \"backlands-server\" -ErrorAction SilentlyContinue)"
     ]
   }
 }

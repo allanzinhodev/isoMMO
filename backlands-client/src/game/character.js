@@ -76,6 +76,21 @@ export class Character {
     return this._moveStart !== null;
   }
 
+  /** Snap immediately to server-authoritative position (no animation). */
+  snapTo(col, row, direction) {
+    this.col        = col;
+    this.row        = row;
+    this.direction  = direction;
+    this._visualCol = col;
+    this._visualRow = row;
+    this._fromCol   = col;
+    this._fromRow   = row;
+    this._toCol     = col;
+    this._toRow     = row;
+    this._moveStart = null;
+    this.moving     = false;
+  }
+
   getFrame() {
     const cfg = DIR_CONFIG[this.direction] ?? DIR_CONFIG[1];
     if (!this.moving) return cfg.idle;

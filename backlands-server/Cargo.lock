@@ -42,8 +42,6 @@ dependencies = [
  "argon2",
  "dotenvy",
  "futures-util",
- "serde",
- "serde_json",
  "sqlx",
  "tokio",
  "tokio-tungstenite",

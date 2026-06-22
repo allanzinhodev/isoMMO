@@ -8,19 +8,39 @@ export const TILE = {
   SAND:  3,
 };
 
-// 10x10 hardcoded map — row-major [row][col]
-export const MAP_DATA = [
-  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-  [0, 0, 0, 1, 1, 0, 0, 0, 0, 0],
-  [0, 0, 1, 1, 1, 1, 0, 0, 0, 0],
-  [0, 1, 1, 3, 3, 1, 1, 0, 0, 0],
-  [0, 0, 1, 3, 3, 1, 0, 0, 2, 2],
-  [0, 0, 0, 1, 1, 0, 0, 2, 2, 2],
-  [0, 0, 0, 0, 0, 0, 2, 2, 0, 0],
-  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-];
+// ── Dynamic map state (populated by S_FULL_MAP from server) ─────────────────
 
-export const MAP_COLS = MAP_DATA[0].length;
-export const MAP_ROWS = MAP_DATA.length;
+const _state = {
+  data: [
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 1, 1, 0, 0, 0, 0, 0],
+    [0, 0, 1, 1, 1, 1, 0, 0, 0, 0],
+    [0, 1, 1, 3, 3, 1, 1, 0, 0, 0],
+    [0, 0, 1, 3, 3, 1, 0, 0, 2, 2],
+    [0, 0, 0, 1, 1, 0, 0, 2, 2, 2],
+    [0, 0, 0, 0, 0, 0, 2, 2, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  ],
+  cols: 10,
+  rows: 10,
+};
+
+/** Called by S_FULL_MAP handler with a 2D row-major array from the server. */
+export function setMapData(rows2d) {
+  _state.data = rows2d;
+  _state.rows = rows2d.length;
+  _state.cols = rows2d[0]?.length ?? 0;
+}
+
+export function getTile(row, col) {
+  return _state.data[row]?.[col] ?? 0;
+}
+
+export function getMapCols() { return _state.cols; }
+export function getMapRows() { return _state.rows; }
+
+// Legacy constants — kept so character.js import still works without changes
+export const MAP_COLS = 10;
+export const MAP_ROWS = 10;

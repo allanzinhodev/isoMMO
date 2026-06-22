@@ -1,5 +1,7 @@
 import { state } from '../state.js';
 import { connect, send, on } from '../network/socket.js';
+import { PacketWriter } from '../network/packet.js';
+import { C_LOGIN, S_CHAR_LIST, S_LOGIN_ERROR } from '../network/opcodes.js';
 
 export function showLogin(container) {
   const card = document.createElement('div');
@@ -37,19 +39,32 @@ export function showLogin(container) {
       return;
     }
 
-    on('char_list', (data) => {
+    on(S_CHAR_LIST, (pkt) => {
+      const count   = pkt.readU8();
+      const players = [];
+      for (let i = 0; i < count; i++) {
+        players.push({
+          id:       pkt.readU32(),
+          name:     pkt.readString(),
+          vocation: pkt.readU8(),
+          looktype: pkt.readU8(),
+        });
+      }
       state.set('currentUser', user);
-      state.set('charList', data.players);
+      state.set('charList', players);
       location.hash = '#select-char';
     });
 
-    on('login_fail', (data) => {
-      showError(data.reason);
+    on(S_LOGIN_ERROR, (pkt) => {
+      showError(pkt.readString());
       btn.disabled = false;
       btn.textContent = 'Entrar';
     });
 
-    send('login', { username: user, password: pass });
+    const pw = new PacketWriter();
+    pw.writeString(user);
+    pw.writeString(pass);
+    send(pw.build(C_LOGIN));
   });
 }
 

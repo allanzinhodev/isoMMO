@@ -2,7 +2,7 @@ use sqlx::MySqlPool;
 use argon2::{Argon2, PasswordHash, PasswordVerifier, PasswordHasher};
 use argon2::password_hash::{SaltString, rand_core::OsRng};
 
-#[derive(Debug, serde::Serialize, sqlx::FromRow)]
+#[derive(Debug, sqlx::FromRow)]
 pub struct Player {
     pub id:       u32,
     pub name:     String,

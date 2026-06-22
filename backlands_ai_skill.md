@@ -59,40 +59,56 @@ players  (id, account_id→accounts, name VARCHAR(100), vocation TINYINT, lookty
 - Default account: `admin` / `backlands123` (seeded on first run)
 - Default characters: Zé Cangaceiro (Black Mage), Maria Curandeira (Hunter), Frei Azulão (Blue Mage)
 
-### WebSocket Protocol (JSON)
-All messages: `{ "op": "<name>", "data": { ... } }`
+### WebSocket Protocol — Binary (TFS-inspired, Phase A)
+Transport: WebSocket Binary frames (`Message::Binary`). No JSON.
 
-**Client → Server:**
-| op | data | description |
-|----|------|-------------|
-| `login` | `{ username, password }` | Authenticate — responds with `char_list` |
-| `select_char` | `{ player_id }` | Enter game — responds with `enter_game` |
-| `move` | `{ direction }` | Move player (1=NE, 3=SE, 7=SW, 9=NW) |
-| `logout` | — | End session |
+**Wire format:** `[Length: u16 LE][Opcode: u8][Payload: N bytes]`  
+Length = 1 (opcode) + N (payload). All multi-byte values are Little-Endian.
 
-**Server → Client:**
-| op | data | description |
-|----|------|-------------|
-| `char_list` | `{ players: [{id, name, vocation, looktype}] }` | After login |
-| `enter_game` | `{ player: {id, name, vocation, looktype, pos_x, pos_y} }` | After char select |
-| `player_moved` | `{ pos_x, pos_y, direction }` | Movement confirmation |
-| `login_fail` | `{ reason }` | Bad credentials |
-| `error` | `{ reason }` | Generic error |
+**String encoding:** `[u16 length][UTF-8 bytes]`
+
+**Client → Server Opcodes:**
+| Hex | Constant | Payload | Description |
+|-----|----------|---------|-------------|
+| `0x01` | `C_LOGIN` | `[str username][str password]` | Authenticate |
+| `0x0F` | `C_ENTER_GAME` | `[u32 player_id]` | Select character |
+| `0x14` | `C_LOGOUT` | — | End session |
+| `0x1D` | `C_PING` | — | Keep-alive ping |
+| `0x65` | `C_WALK_NORTH` | — | Move row-1 (W key) |
+| `0x66` | `C_WALK_EAST` | — | Move col+1 (D key) |
+| `0x67` | `C_WALK_SOUTH` | — | Move row+1 (S key) |
+| `0x68` | `C_WALK_WEST` | — | Move col-1 (A key) |
+| `0x6F–0x72` | `C_TURN_*` | — | Turn N/E/S/W without walking |
+
+**Server → Client Opcodes:**
+| Hex | Constant | Payload | Description |
+|-----|----------|---------|-------------|
+| `0x0A` | `S_LOGIN_ERROR` | `[str reason]` | Bad credentials |
+| `0x17` | `S_ENTER_GAME` | `[u32 id][str name][u8 vocation][u8 looktype][u16 pos_x][u16 pos_y]` | Game entry |
+| `0x1D` | `S_PING_BACK` | — | Pong |
+| `0x64` | `S_CHAR_LIST` | `[u8 count]{[u32 id][str name][u8 vocation][u8 looktype]}*` | After login |
+| `0x6D` | `S_MOVE_CREATURE` | — | (Phase C: multiplayer broadcast) |
+| `0xA0` | `S_PLAYER_DATA` | `[u16 pos_x][u16 pos_y][u8 direction]` | Movement confirmation |
+| `0xB4` | `S_TEXT_MESSAGE` | `[u8 type][str message]` | Server text |
+
+**Direction encoding (server-side):** 1=NE, 3=SE, 7=SW, 9=NW
 
 ### File Structure
 ```
 backlands-server/
-  Cargo.toml          — tokio, tokio-tungstenite, sqlx (mysql), argon2, serde_json, dotenvy
+  Cargo.toml          — tokio, tokio-tungstenite, sqlx (mysql), argon2, dotenvy
   schema.sql          — CREATE TABLE accounts + players (runs on startup)
-  seed.sql            — reference only, seed runs in code on first boot
   .env                — DATABASE_URL + SERVER_ADDR
   src/
     main.rs            — entry: load .env, connect MySQL, run migrations, seed, start WS
     db/mod.rs          — create_pool, run_migrations, seed_default_account, verify_account,
                          get_players, get_player, save_player_pos
     game/world.rs      — MAP_COLS=10, MAP_ROWS=10
-    network/mod.rs     — WS accept loop, per-connection session state machine (async)
-    network/protocol.rs — ClientMsg / ServerMsg enums (serde)
+    utils/mod.rs       — pub mod byte_buffer
+    utils/byte_buffer.rs — ByteBuffer (LE r/w), parse_packet()
+    network/mod.rs     — WS Binary accept loop, per-connection session state machine (async)
+    network/opcodes.rs — C_* / S_* opcode constants (TFS hex values)
+    network/protocol.rs — decode(data) → ClientMsg, encode functions (login_error, char_list, etc.)
 ```
 
 ---
@@ -109,7 +125,9 @@ backlands-client/
     state.js             — simple key/value store (Map)
     placeholder-data.js  — unused legacy mock data
     network/
-      socket.js          — WebSocket wrapper: connect(), send(op, data), on(op, fn), disconnect()
+      opcodes.js         — C_* / S_* opcode hex constants
+      packet.js          — PacketWriter (builds ArrayBuffer), PacketReader (DataView LE parsing)
+      socket.js          — connect() [binaryType=arraybuffer], send(buffer), on(opcode,fn), disconnect()
     ui/
       login.js           — connect WS → send login → on char_list → #select-char
       char-select.js     — renders char cards with sprite idle from server data → send select_char
@@ -119,10 +137,15 @@ backlands-client/
       character.js       — Character class: smooth movement, direction system, sprite draw with flip
 ```
 
-### WebSocket Flow
-1. **Login** → `connect()` to `ws://localhost:7171` → `send('login', {username, password})` → receive `char_list`
-2. **Char Select** → renders server players with idle sprite preview (canvas per card) → `send('select_char', {player_id})` → receive `enter_game`
-3. **Game** → spawns character at `pos_x/pos_y` from server, WASD moves → `send('move', {direction})` each step
+### WebSocket Flow (Binary, Phase A)
+1. **Login** → `connect()` (`binaryType='arraybuffer'`) → `PacketWriter` sends `C_LOGIN` → receive `S_CHAR_LIST` (opcode `0x64`)
+2. **Char Select** → renders server players with idle sprite → `PacketWriter` sends `C_ENTER_GAME [u32 id]` → receive `S_ENTER_GAME` (opcode `0x17`)
+3. **Game** → spawns character at `pos_x/pos_y`, WASD sends `C_WALK_*` opcodes → receive `S_PLAYER_DATA` confirmation
+
+### Network Module Files (`src/network/`)
+- **`opcodes.js`** — `C_*` / `S_*` hex constants matching server
+- **`packet.js`** — `PacketWriter` (builds ArrayBuffer packets), `PacketReader` (parses with DataView)
+- **`socket.js`** — `connect()`, `send(buffer)`, `on(opcode, fn)`, `off(opcode)`, `disconnect()`
 
 ### Isometric Coordinate System
 ```
@@ -182,4 +205,4 @@ When the user requests the OTClient port, follow these rules:
 - [ ] Character anchor point (-4px Y correction)
 - [ ] Map bounds clamping
 - [ ] Debug grid overlay (G key toggle)
-- [ ] WebSocket → server protocol (JSON op/data format)
+- [ ] WebSocket → server protocol (binary TFS-style opcodes, Phase A complete on browser client)
