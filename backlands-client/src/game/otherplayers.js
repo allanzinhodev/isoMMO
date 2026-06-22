@@ -13,6 +13,10 @@ export function removeCreature(id) {
   _creatures.delete(id);
 }
 
+export function getCreature(id) {
+  return _creatures.get(id);
+}
+
 export function moveCreature(id, newCol, newRow, dir) {
   const c = _creatures.get(id);
   if (c) c.moveTo(newCol, newRow, dir);

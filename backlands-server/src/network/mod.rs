@@ -165,6 +165,48 @@ async fn handle_connection(
             ClientMsg::TurnSouth => { direction = 7; }
             ClientMsg::TurnWest  => { direction = 9; }
 
+            ClientMsg::Attack { target_id } => {
+                let Some(cid) = creature_id else { continue; };
+                if cid == target_id { continue; } // no self attack
+
+                let mut g = game.write().await;
+                
+                let mut target_died = false;
+                let mut hp_percent = 0;
+                let mut tx = 0;
+                let mut ty = 0;
+                let mut valid = false;
+
+                if let Some(target) = g.players.get_mut(&target_id) {
+                    if target.hp > 0 {
+                        target.hp = target.hp.saturating_sub(10);
+                        hp_percent = ((target.hp as f32 / target.max_hp as f32) * 100.0) as u8;
+                        tx = target.pos_x;
+                        ty = target.pos_y;
+                        target_died = target.hp == 0;
+                        valid = true;
+                    }
+                }
+
+                if valid {
+                    let hp_pkt = protocol::creature_health(target_id, hp_percent);
+                    let fx_pkt = protocol::graphical_effect(tx, ty, 1);
+                    let dmg_pkt = protocol::text_effect(tx, ty, 180, "-10");
+                    
+                    g.broadcast_all(hp_pkt);
+                    g.broadcast_all(fx_pkt);
+                    g.broadcast_all(dmg_pkt);
+                    
+                    if target_died {
+                        g.broadcast_all(protocol::death(target_id));
+                    }
+                }
+            }
+
+            ClientMsg::ChangeFightModes { .. } => {
+                // Ignore for now
+            }
+
             ClientMsg::Ping => { let _ = btx.send(protocol::ping_back()); }
 
             ClientMsg::Logout => {

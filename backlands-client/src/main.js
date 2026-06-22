@@ -1,16 +1,17 @@
 import { showLogin }     from './ui/login.js';
 import { showCharSelect } from './ui/char-select.js';
-import { renderMap }      from './game/renderer.js';
+import { renderMap, screenToIso } from './game/renderer.js';
 import { Character }      from './game/character.js';
 import { MAP_COLS, MAP_ROWS, setMapData } from './game/map.js';
-import { addCreature, removeCreature, moveCreature, updateAll, getCreatures, clear as clearCreatures } from './game/otherplayers.js';
+import { addCreature, removeCreature, moveCreature, updateAll, getCreatures, getCreature, clear as clearCreatures } from './game/otherplayers.js';
 import { state }          from './state.js';
 import { send, on, disconnect } from './network/socket.js';
 import { PacketWriter }   from './network/packet.js';
 import {
-  C_WALK_NORTH, C_WALK_EAST, C_WALK_SOUTH, C_WALK_WEST,
+  C_WALK_NORTH, C_WALK_EAST, C_WALK_SOUTH, C_WALK_WEST, C_ATTACK,
   S_FULL_MAP, S_PLAYER_DATA,
   S_CREATE_ON_MAP, S_DELETE_ON_MAP, S_MOVE_CREATURE,
+  S_CREATURE_HEALTH, S_DEATH, S_GRAPHICAL_EFFECT, S_TEXT_EFFECT
 } from './network/opcodes.js';
 
 let debugGrid  = false;
@@ -89,6 +90,36 @@ function startGame(container) {
     moveCreature(id, x, y, dir);
   });
 
+  // Combat Handlers
+  on(S_CREATURE_HEALTH, (pkt) => {
+    const id = pkt.readU32();
+    const hp = pkt.readU8();
+    const c = getCreature(id);
+    if (c) c.hpPercent = hp;
+  });
+
+  on(S_DEATH, (pkt) => {
+    const id = pkt.readU32();
+    removeCreature(id);
+  });
+
+  on(S_GRAPHICAL_EFFECT, (pkt) => {
+    const x = pkt.readU16();
+    const y = pkt.readU16();
+    const effect = pkt.readU8();
+    // For now we just log, would render a particle effect in effects.js
+    console.log("Graphical effect", effect, "at", x, y);
+  });
+
+  on(S_TEXT_EFFECT, (pkt) => {
+    const x = pkt.readU16();
+    const y = pkt.readU16();
+    const color = pkt.readU8();
+    const text = pkt.readString();
+    // For now we just log, would render animated text
+    console.log("Text effect", text, color, "at", x, y);
+  });
+
   // ── Input ────────────────────────────────────────────────────────────────
 
   const onResize = () => {
@@ -101,12 +132,37 @@ function startGame(container) {
     if (e.key === 'g' || e.key === 'G') debugGrid = !debugGrid;
   };
   const onKeyUp = (e) => { keys[e.key] = false; };
+  
+  const onMouseDown = (e) => {
+    const w = canvas.width;
+    const h = canvas.height;
+    const offsetX = w / 2;
+    const offsetY = h / 4;
+    
+    // Convert click to isometric coordinates
+    const { col, row } = screenToIso(e.clientX, e.clientY, offsetX, offsetY);
+    
+    // Find creature at that pos
+    const target = getCreatures().find(c => c.col === col && c.row === row);
+    
+    // Clear all targets
+    getCreatures().forEach(c => c.isTarget = false);
+    
+    if (target) {
+      target.isTarget = true;
+      // Send attack
+      const p = new PacketWriter();
+      p.writeU32(target.id);
+      send(p.build(C_ATTACK));
+    }
+  };
 
   window.addEventListener('resize',  onResize);
   window.addEventListener('keydown', onKeyDown);
   window.addEventListener('keyup',   onKeyUp);
+  window.addEventListener('mousedown', onMouseDown);
 
-  activeLoop = { running: true, onResize, onKeyDown, onKeyUp };
+  activeLoop = { running: true, onResize, onKeyDown, onKeyUp, onMouseDown };
 
   // ── Game loop ────────────────────────────────────────────────────────────
 
@@ -169,6 +225,7 @@ function stopGame() {
     window.removeEventListener('resize',  activeLoop.onResize);
     window.removeEventListener('keydown', activeLoop.onKeyDown);
     window.removeEventListener('keyup',   activeLoop.onKeyUp);
+    window.removeEventListener('mousedown', activeLoop.onMouseDown);
     activeLoop = null;
   }
   document.getElementById('game-canvas').style.display = 'none';

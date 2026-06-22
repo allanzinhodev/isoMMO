@@ -15,6 +15,15 @@ export function isoToScreen(col, row, offsetX, offsetY) {
   };
 }
 
+export function screenToIso(screenX, screenY, offsetX, offsetY) {
+  const dx = (screenX - offsetX) / HALF_W;
+  const dy = (screenY - offsetY) / HALF_H;
+  return {
+    col: Math.floor((dy + dx) / 2),
+    row: Math.floor((dy - dx) / 2),
+  };
+}
+
 function drawTile(ctx, col, row, offsetX, offsetY, debugGrid) {
   const { x, y } = isoToScreen(col, row, offsetX, offsetY);
   const tileType  = getTile(row, col);

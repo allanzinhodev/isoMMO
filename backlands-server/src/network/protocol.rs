@@ -18,6 +18,8 @@ pub enum ClientMsg {
     TurnWest,
     Ping,
     Logout,
+    Attack { target_id: u32 },
+    ChangeFightModes { mode: u8, chase: u8 },
     Unknown(u8),
 }
 
@@ -39,6 +41,8 @@ pub fn decode(data: &[u8]) -> Option<ClientMsg> {
         C_TURN_WEST  => ClientMsg::TurnWest,
         C_PING       => ClientMsg::Ping,
         C_LOGOUT     => ClientMsg::Logout,
+        C_ATTACK     => ClientMsg::Attack { target_id: p.read_u32()? },
+        C_CHANGE_FIGHT_MODES => ClientMsg::ChangeFightModes { mode: p.read_u8()?, chase: p.read_u8()? },
         op           => ClientMsg::Unknown(op),
     };
     Some(msg)
@@ -146,4 +150,51 @@ pub fn move_creature(creature_id: u32, pos_x: i16, pos_y: i16, direction: u8) ->
     b.write_u16(pos_y as u16);
     b.write_u8(direction);
     b.into_packet(S_MOVE_CREATURE)
+}
+
+// ── Combat ───────────────────────────────────────────────────────────────────
+
+/// [u32 creature_id][u8 hp_percent]
+pub fn creature_health(creature_id: u32, hp_percent: u8) -> Vec<u8> {
+    let mut b = ByteBuffer::new();
+    b.write_u32(creature_id);
+    b.write_u8(hp_percent);
+    b.into_packet(S_CREATURE_HEALTH)
+}
+
+/// [u16 pos_x][u16 pos_y][u8 effect_id]
+pub fn graphical_effect(pos_x: i16, pos_y: i16, effect_id: u8) -> Vec<u8> {
+    let mut b = ByteBuffer::new();
+    b.write_u16(pos_x as u16);
+    b.write_u16(pos_y as u16);
+    b.write_u8(effect_id);
+    b.into_packet(S_GRAPHICAL_EFFECT)
+}
+
+/// [u16 pos_x][u16 pos_y][u8 color][str text]
+pub fn text_effect(pos_x: i16, pos_y: i16, color: u8, text: &str) -> Vec<u8> {
+    let mut b = ByteBuffer::new();
+    b.write_u16(pos_x as u16);
+    b.write_u16(pos_y as u16);
+    b.write_u8(color);
+    b.write_string(text);
+    b.into_packet(S_TEXT_EFFECT)
+}
+
+/// [u16 from_x][u16 from_y][u16 to_x][u16 to_y][u8 missile_id]
+pub fn missile_effect(from_x: i16, from_y: i16, to_x: i16, to_y: i16, missile_id: u8) -> Vec<u8> {
+    let mut b = ByteBuffer::new();
+    b.write_u16(from_x as u16);
+    b.write_u16(from_y as u16);
+    b.write_u16(to_x as u16);
+    b.write_u16(to_y as u16);
+    b.write_u8(missile_id);
+    b.into_packet(S_MISSILE_EFFECT)
+}
+
+/// [u32 creature_id]
+pub fn death(creature_id: u32) -> Vec<u8> {
+    let mut b = ByteBuffer::new();
+    b.write_u32(creature_id);
+    b.into_packet(S_DEATH)
 }

@@ -41,6 +41,9 @@ export class Character {
     this._toCol     = col;
     this._toRow     = row;
     this._moveStart = null;
+    
+    this.hpPercent = 100;
+    this.isTarget = false;
   }
 
   moveTo(col, row, direction) {
@@ -114,12 +117,33 @@ export class Character {
     ctx.save();
     ctx.imageSmoothingEnabled = false;
 
+    // Draw target highlight if needed
+    if (this.isTarget) {
+      ctx.strokeStyle = 'red';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(drawX, drawY, dw, dh);
+    }
+
     if (cfg.flipH) {
       ctx.translate(drawX + dw, drawY);
       ctx.scale(-1, 1);
       ctx.drawImage(sheet, frame * SPRITE_W, sheetY, SPRITE_W, SPRITE_H, 0, 0, dw, dh);
     } else {
       ctx.drawImage(sheet, frame * SPRITE_W, sheetY, SPRITE_W, SPRITE_H, drawX, drawY, dw, dh);
+    }
+    
+    // Draw health bar
+    if (this.hpPercent < 100) {
+      const barW = 20;
+      const barH = 4;
+      const bx = drawX + (dw - barW) / 2;
+      const by = drawY - 8;
+      
+      ctx.fillStyle = 'black';
+      ctx.fillRect(bx, by, barW, barH);
+      
+      ctx.fillStyle = this.hpPercent > 50 ? '#2ecc71' : this.hpPercent > 20 ? '#f1c40f' : '#e74c3c';
+      ctx.fillRect(bx + 1, by + 1, Math.max(0, (barW - 2) * (this.hpPercent / 100)), barH - 2);
     }
 
     ctx.restore();

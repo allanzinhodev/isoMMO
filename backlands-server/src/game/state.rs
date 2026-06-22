@@ -17,6 +17,8 @@ pub struct PlayerState {
     pub pos_x:       i16,
     pub pos_y:       i16,
     pub direction:   u8,
+    pub hp:          u32,
+    pub max_hp:      u32,
     sender: mpsc::UnboundedSender<Vec<u8>>,
 }
 
@@ -27,7 +29,7 @@ impl PlayerState {
         pos_x: i16, pos_y: i16, direction: u8,
         sender: mpsc::UnboundedSender<Vec<u8>>,
     ) -> Self {
-        Self { creature_id, player_id, name, looktype, pos_x, pos_y, direction, sender }
+        Self { creature_id, player_id, name, looktype, pos_x, pos_y, direction, hp: 100, max_hp: 100, sender }
     }
 
     pub fn send(&self, pkt: Vec<u8>) {

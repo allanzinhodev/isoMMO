@@ -11,6 +11,8 @@ pub const C_TURN_NORTH: u8 = 0x6F;
 pub const C_TURN_EAST:  u8 = 0x70;
 pub const C_TURN_SOUTH: u8 = 0x71;
 pub const C_TURN_WEST:  u8 = 0x72;
+pub const C_ATTACK:             u8 = 0xA1;
+pub const C_CHANGE_FIGHT_MODES: u8 = 0xA0;
 
 // Server → Client opcodes (TFS-aligned)
 pub const S_LOGIN_ERROR:    u8 = 0x0A;
@@ -29,3 +31,8 @@ pub const S_DELETE_ON_MAP:  u8 = 0x6C; // TFS: GameServerDeleteOnMap — despawn
 pub const S_MOVE_CREATURE:  u8 = 0x6D; // TFS: GameServerMoveCreature — creature moved
 pub const S_PLAYER_DATA:    u8 = 0xA0;
 pub const S_TEXT_MESSAGE:   u8 = 0xB4;
+pub const S_CREATURE_HEALTH:  u8 = 0x8C;
+pub const S_GRAPHICAL_EFFECT: u8 = 0x83;
+pub const S_TEXT_EFFECT:      u8 = 0x84;
+pub const S_MISSILE_EFFECT:   u8 = 0x85;
+pub const S_DEATH:            u8 = 0x28;
