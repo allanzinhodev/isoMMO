@@ -3,7 +3,7 @@ import { showCharSelect } from './ui/char-select.js';
 import { renderMap }      from './game/renderer.js';
 import { Character }      from './game/character.js';
 import { MAP_COLS, MAP_ROWS, setMapData } from './game/map.js';
-import { addCreature, removeCreature, moveCreature, updateAll, drawAll, clear as clearCreatures } from './game/otherplayers.js';
+import { addCreature, removeCreature, moveCreature, updateAll, getCreatures, clear as clearCreatures } from './game/otherplayers.js';
 import { state }          from './state.js';
 import { send, on, disconnect } from './network/socket.js';
 import { PacketWriter }   from './network/packet.js';
@@ -150,8 +150,13 @@ function startGame(container) {
     const offsetY = h / 4;
 
     renderMap(ctx, w, h, debugGrid);
-    drawAll(ctx, offsetX, offsetY);       // other players
-    player.draw(ctx, offsetX, offsetY);   // self on top
+
+    const entities = [player, ...getCreatures()];
+    entities.sort((a, b) => (a._visualCol + a._visualRow) - (b._visualCol + b._visualRow));
+
+    for (const ent of entities) {
+      ent.draw(ctx, offsetX, offsetY);
+    }
 
     requestAnimationFrame(loop);
   }

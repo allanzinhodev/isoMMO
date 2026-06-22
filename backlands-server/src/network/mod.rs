@@ -131,28 +131,32 @@ async fn handle_connection(
                 let Some(cid) = creature_id else { continue; };
                 direction = 1;
                 let ny = pos_y - 1;
-                if ny >= 0 && world_map.is_walkable(pos_x as usize, ny as usize) { pos_y = ny; }
+                let is_occupied = game.read().await.players.values().any(|p| p.pos_x == pos_x && p.pos_y == ny);
+                if ny >= 0 && !is_occupied && world_map.is_walkable(pos_x as usize, ny as usize) { pos_y = ny; }
                 commit_move(&game, cid, &btx, pos_x, pos_y, direction).await;
             }
             ClientMsg::WalkEast => {
                 let Some(cid) = creature_id else { continue; };
                 direction = 3;
                 let nx = pos_x + 1;
-                if world_map.is_walkable(nx as usize, pos_y as usize) { pos_x = nx; }
+                let is_occupied = game.read().await.players.values().any(|p| p.pos_x == nx && p.pos_y == pos_y);
+                if !is_occupied && world_map.is_walkable(nx as usize, pos_y as usize) { pos_x = nx; }
                 commit_move(&game, cid, &btx, pos_x, pos_y, direction).await;
             }
             ClientMsg::WalkSouth => {
                 let Some(cid) = creature_id else { continue; };
                 direction = 7;
                 let ny = pos_y + 1;
-                if world_map.is_walkable(pos_x as usize, ny as usize) { pos_y = ny; }
+                let is_occupied = game.read().await.players.values().any(|p| p.pos_x == pos_x && p.pos_y == ny);
+                if !is_occupied && world_map.is_walkable(pos_x as usize, ny as usize) { pos_y = ny; }
                 commit_move(&game, cid, &btx, pos_x, pos_y, direction).await;
             }
             ClientMsg::WalkWest => {
                 let Some(cid) = creature_id else { continue; };
                 direction = 9;
                 let nx = pos_x - 1;
-                if nx >= 0 && world_map.is_walkable(nx as usize, pos_y as usize) { pos_x = nx; }
+                let is_occupied = game.read().await.players.values().any(|p| p.pos_x == nx && p.pos_y == pos_y);
+                if nx >= 0 && !is_occupied && world_map.is_walkable(nx as usize, pos_y as usize) { pos_x = nx; }
                 commit_move(&game, cid, &btx, pos_x, pos_y, direction).await;
             }
 

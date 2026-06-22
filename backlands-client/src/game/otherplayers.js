@@ -22,8 +22,8 @@ export function updateAll(now) {
   _creatures.forEach(c => c.update(now));
 }
 
-export function drawAll(ctx, offsetX, offsetY) {
-  _creatures.forEach(c => c.draw(ctx, offsetX, offsetY));
+export function getCreatures() {
+  return Array.from(_creatures.values());
 }
 
 export function clear() {
