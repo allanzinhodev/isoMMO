@@ -139,14 +139,32 @@ function startGame(container) {
     const offsetX = w / 2;
     const offsetY = h / 4;
     
-    // Convert click to isometric coordinates
-    const { col, row } = screenToIso(e.clientX, e.clientY, offsetX, offsetY);
+    const creatures = getCreatures();
     
-    // Find creature at that pos
-    const target = getCreatures().find(c => c.col === col && c.row === row);
+    // Sort in reverse order (front to back) for proper picking
+    const sortedCreatures = [...creatures].sort((a, b) => (b._visualCol + b._visualRow) - (a._visualCol + a._visualRow));
+    
+    let target = null;
+    for (const c of sortedCreatures) {
+      // Duplicate logic from character.js drawing
+      // We need isoToScreen here, which we can import or calculate
+      const dx = offsetX + (c._visualCol - c._visualRow) * 16;
+      const dy = offsetY + (c._visualCol + c._visualRow) * 8;
+      
+      const dw = 16; // SPRITE_W
+      const dh = 32; // SPRITE_H
+      const drawX = dx - dw / 2;
+      const drawY = dy + 16 - dh - 4; // TILE_H = 16
+      
+      if (e.clientX >= drawX && e.clientX <= drawX + dw &&
+          e.clientY >= drawY && e.clientY <= drawY + dh) {
+        target = c;
+        break;
+      }
+    }
     
     // Clear all targets
-    getCreatures().forEach(c => c.isTarget = false);
+    creatures.forEach(c => c.isTarget = false);
     
     if (target) {
       target.isTarget = true;
