@@ -27,10 +27,11 @@ const DIR_CONFIG = {
 };
 
 export class Character {
-  constructor(col, row, type = CHARACTER_TYPE.BLACK_MAGE) {
+  constructor(col, row, type = CHARACTER_TYPE.BLACK_MAGE, name = '') {
     this.col  = col;
     this.row  = row;
     this.type = type;
+    this.name = name;
     this.direction = 7;
     this.moving    = false;
 

@@ -3,8 +3,8 @@ import { Character } from './character.js';
 // creature_id → Character instance
 const _creatures = new Map();
 
-export function addCreature(id, col, row, dir, looktype) {
-  const c = new Character(col, row, looktype);
+export function addCreature(id, col, row, dir, looktype, name) {
+  const c = new Character(col, row, looktype, name);
   c.direction = dir;
   c.id = id;
   _creatures.set(id, c);

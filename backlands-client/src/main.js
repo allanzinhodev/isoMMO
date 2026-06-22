@@ -27,6 +27,7 @@ function startGame(container) {
   const startCol = char?.pos_x   ?? 5;
   const startRow = char?.pos_y   ?? 5;
   const looktype = char?.looktype ?? 0;
+  const myName   = char?.name ?? 'Player';
 
   document.getElementById('ui-root').innerHTML = '';
   const canvas = document.getElementById('game-canvas');
@@ -41,7 +42,7 @@ function startGame(container) {
 
   clearCreatures();
 
-  const player = new Character(startCol, startRow, looktype);
+  const player = new Character(startCol, startRow, looktype, myName);
   player.direction = 1;
 
   // ── Server → Client handlers ─────────────────────────────────────────────
@@ -75,9 +76,9 @@ function startGame(container) {
     const x        = pkt.readU16();
     const y        = pkt.readU16();
     const dir      = pkt.readU8();
-    /*const name  =*/ pkt.readString(); // reserved for nameplate (Phase D/E)
+    const name     = pkt.readString();
     const looktype = pkt.readU8();
-    addCreature(id, x, y, dir, looktype);
+    addCreature(id, x, y, dir, looktype, name);
   });
 
   // Another player left range or disconnected
