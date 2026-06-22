@@ -6,6 +6,7 @@ const _creatures = new Map();
 export function addCreature(id, col, row, dir, looktype) {
   const c = new Character(col, row, looktype);
   c.direction = dir;
+  c.id = id;
   _creatures.set(id, c);
 }
 

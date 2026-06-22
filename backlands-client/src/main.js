@@ -4,6 +4,7 @@ import { renderMap, screenToIso } from './game/renderer.js';
 import { Character }      from './game/character.js';
 import { MAP_COLS, MAP_ROWS, setMapData } from './game/map.js';
 import { addCreature, removeCreature, moveCreature, updateAll, getCreatures, getCreature, clear as clearCreatures } from './game/otherplayers.js';
+import { addFloatingText, drawEffects } from './game/effects.js';
 import { state }          from './state.js';
 import { send, on, disconnect } from './network/socket.js';
 import { PacketWriter }   from './network/packet.js';
@@ -116,8 +117,7 @@ function startGame(container) {
     const y = pkt.readU16();
     const color = pkt.readU8();
     const text = pkt.readString();
-    // For now we just log, would render animated text
-    console.log("Text effect", text, color, "at", x, y);
+    addFloatingText(x, y, color, text);
   });
 
   // ── Input ────────────────────────────────────────────────────────────────
@@ -213,6 +213,8 @@ function startGame(container) {
     for (const ent of entities) {
       ent.draw(ctx, offsetX, offsetY);
     }
+
+    drawEffects(ctx, offsetX, offsetY, now);
 
     requestAnimationFrame(loop);
   }
